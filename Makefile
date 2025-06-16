@@ -23,6 +23,12 @@ add-repo:
 	helm repo add prefect https://prefecthq.github.io/prefect-helm
 	helm repo update
 
+# Add rbac permissions for Prefect server and worker
+.PHONY: add-rbac
+add-rbac:
+	@echo "Adding RBAC permissions for Prefect server and worker..."
+	kubectl apply -f worker-rbac.yaml
+
 # Create namespace if it doesn't exist
 .PHONY: create-namespace
 create-namespace:
@@ -133,6 +139,7 @@ help:
 	@echo ""
 	@echo "Available targets:"
 	@echo "  add-repo           - Add Prefect Helm repository"
+	@echo "  add-rbac           - Add RBAC permissions for Prefect server and worker"
 	@echo "  create-namespace   - Create Kubernetes namespace"
 	@echo "  install-server     - Install only Prefect server"
 	@echo "  install-worker     - Install only Prefect worker"
