@@ -126,7 +126,7 @@
         "title": "Service Account Name"
       },
       "image_pull_policy": {
-        "default": "IfNotPresent",
+        "default": "Always",
         "description": "The Kubernetes image pull policy to use for job containers.",
         "enum": ["IfNotPresent", "Always", "Never"],
         "title": "Image Pull Policy",
