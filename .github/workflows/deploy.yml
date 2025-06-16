@@ -2,15 +2,22 @@ name: Deploy to Digital Ocean Kubernetes Cluster
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Add prefect helm repository
-      run: make add-repo
+      - uses: actions/checkout@v4
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Set up kubectl
+        run: doctl kubernetes cluster kubeconfig save 0ab5b7be-1fd8-44fc-83ca-2e241d0ff318
+
+      - name: Add prefect helm repository
+        run: make add-repo
