@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "prefect>=3.4.5",
     "prefect-docker>=0.6.6",
+    "prefect-kubernetes>=0.6.1",
 ]
 
 [dependency-groups]

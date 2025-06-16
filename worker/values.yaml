@@ -1,7 +1,7 @@
 worker:
   apiConfig: selfHostedServer
   config:
-    workPool: kube-default
+    workPool: kubernetes-default
   selfHostedServerApiConfig:
     apiUrl: http://prefect-server.prefect.svc.cluster.local:4200/api
 
@@ -9,8 +9,3 @@ worker:
 serviceAccount:
   create: true
   name: prefect-worker
-
-# Job configuration
-job:
-  namespace: default
-  serviceAccount: prefect-worker

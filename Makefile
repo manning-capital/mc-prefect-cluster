@@ -8,7 +8,7 @@ SERVER_CHART_REPO ?= prefect/prefect-server
 WORKER_CHART_REPO ?= prefect/prefect-worker
 CHART_VERSION ?= latest
 SERVER_VALUES_FILE ?= server-values.yaml
-WORKER_VALUES_FILE ?= worker-values.yaml
+WORKER_VALUES_FILE ?= worker/values.yaml
 KUBE_CONTEXT ?= $(shell kubectl config current-context)
 WORKER_WORK_QUEUE ?= default
 
@@ -27,7 +27,7 @@ add-repo:
 .PHONY: add-rbac
 add-rbac:
 	@echo "Adding RBAC permissions for Prefect server and worker..."
-	kubectl apply -f worker-rbac.yaml
+	kubectl apply -f worker/rbac.yaml
 
 # Create namespace if it doesn't exist
 .PHONY: create-namespace
@@ -69,7 +69,8 @@ upgrade-worker: add-repo
 	@echo "Upgrading Prefect worker in namespace $(NAMESPACE)..."
 	helm upgrade $(WORKER_RELEASE_NAME) $(WORKER_CHART_REPO) \
 		--namespace $(NAMESPACE) \
-		$(if $(wildcard $(WORKER_VALUES_FILE)),--values $(WORKER_VALUES_FILE),)
+		$(if $(wildcard $(WORKER_VALUES_FILE)),--values $(WORKER_VALUES_FILE),) \
+		--set-file worker.config.baseJobTemplate.configuration=worker/base-job-template.json
 
 # Upgrade both server and worker
 .PHONY: upgrade
@@ -116,6 +117,7 @@ $(SERVER_VALUES_FILE):
 # Create default worker values file if it doesn't exist
 $(WORKER_VALUES_FILE):
 	@echo "Creating default worker values file at $(WORKER_VALUES_FILE)..."
+	@mkdir -p worker
 	@echo "# Prefect Worker Helm chart configuration" > $(WORKER_VALUES_FILE)
 	@echo "# See https://github.com/PrefectHQ/prefect-helm/tree/main/charts/prefect-worker for all options" >> $(WORKER_VALUES_FILE)
 	@echo "" >> $(WORKER_VALUES_FILE)
