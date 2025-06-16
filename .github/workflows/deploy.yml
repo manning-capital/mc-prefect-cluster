@@ -21,3 +21,9 @@ jobs:
 
       - name: Add prefect helm repository
         run: make add-repo
+
+      - name: Create namespace
+        run: make create-namespace
+
+      - name: Upgrade prefect server
+        run: make upgrade
