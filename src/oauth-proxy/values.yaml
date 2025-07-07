@@ -1,0 +1,10 @@
+config:
+  clientID: "Ov23liBM96wcwT9Af5nM"
+  clientSecret: "03411d521e670b310dca57e240528982da6e173a"
+  cookieSecret: "B723hlltYzh0REs2aZKdOl-QRPd4gvxK5dNBZ3PNOqY="
+  configFile: |-
+    provider="github"
+    http_address="0.0.0.0:80"
+    github_org="manning-capital"
+    email_domains="*"
+    redirect_url="https://prefect.manningcapital.co.uk"

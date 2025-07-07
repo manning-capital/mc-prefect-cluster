@@ -1,0 +1,3 @@
+server:
+  uiConfig:
+    prefectUiApiUrl: "https://prefect.manningcapital.co.uk/api"
