@@ -35,6 +35,12 @@ jobs:
           kubectl cluster-info
           kubectl get nodes
 
+      - name: Add RBAC permissions
+        run: make add-rbac
+
+      - name: Create namespace
+        run: make create-namespace
+
       - name: Upgrade prefect server and worker
         env:
           OAUTH2_CLIENT_ID: ${{ secrets.PREFECT_SERVER_GITHUB_CLIENT_ID }}
