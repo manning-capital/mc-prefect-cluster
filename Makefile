@@ -41,83 +41,55 @@ create-cluster-issuer:
 	@echo "Creating cluster issuer for Let's Encrypt..."
 	kubectl apply -f src/oauth-proxy/cluster-issuer.yaml --namespace $(CERT_MANAGER_NAMESPACE)
 
-# Create oauth2 ingress resource.
-.PHONY: create-oauth2-ingress
-create-oauth2-ingress:
-	@echo "Creating OAuth2 Ingress resource..."
-	kubectl apply -f src/oauth-proxy/oauth-ingress.yaml --namespace $(NAMESPACE)
-
-# Create prefect server ingress resource.
-.PHONY: create-server-ingress
-create-server-ingress:
-	@echo "Creating Prefect Server Ingress resource..."
-	kubectl apply -f src/server/server-ingress.yaml --namespace $(NAMESPACE)
-
-# Create ingress resources
-.PHONY: create-ingress
-create-ingress: create-cluster-issuer create-oauth2-ingress create-server-ingress
-
 # Create namespace if it doesn't exist
 .PHONY: create-namespace
 create-namespace:
 	@echo "Creating namespace $(NAMESPACE) if it doesn't exist..."
 	kubectl create namespace $(NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
 
-# Install Prefect server using Helm
-.PHONY: install-server
-install-server: add-repos create-namespace
-	@echo "Installing Prefect server in namespace $(NAMESPACE)..."
-	helm install $(SERVER_RELEASE_NAME) $(SERVER_CHART_REPO) \
-		--namespace $(NAMESPACE) \
-		$(if $(wildcard $(SERVER_VALUES_FILE)),--values $(SERVER_VALUES_FILE),)
-
-# Install Prefect worker using Helm
-.PHONY: install-worker
-install-worker: add-repos create-namespace
-	@echo "Installing Prefect worker in namespace $(NAMESPACE)..."
-	helm install $(WORKER_RELEASE_NAME) $(WORKER_CHART_REPO) \
-		--namespace $(NAMESPACE) \
-		$(if $(wildcard $(WORKER_VALUES_FILE)),--values $(WORKER_VALUES_FILE),)
-
-.PHONY: install-oauth-proxy
-install-oauth-proxy: add-repos create-namespace
-	@echo "Installing OAuth proxy in namespace $(NAMESPACE)..."
-	helm install prefect-oauth2-proxy oauth2-proxy/oauth2-proxy \
-		--namespace $(NAMESPACE) \
-		${if $(wildcard $(OAUTH2_VALUES_FILE)),--values $(OAUTH2_VALUES_FILE),}
-
-# Install both server and worker
-.PHONY: install
-install: install-server install-worker install-oauth-proxy create-ingress
-
-# Upgrade existing server installation
+# Upgrade/Install Prefect server using Helm (--install flag ensures it installs if not exists, upgrades if exists)
 .PHONY: upgrade-server
-upgrade-server: add-repos
-	@echo "Upgrading Prefect server in namespace $(NAMESPACE)..."
-	helm upgrade $(SERVER_RELEASE_NAME) $(SERVER_CHART_REPO) \
+upgrade-server: add-repos create-namespace
+	@echo "Upgrading/Installing Prefect server in namespace $(NAMESPACE)..."
+	helm upgrade --install $(SERVER_RELEASE_NAME) $(SERVER_CHART_REPO) \
 		--namespace $(NAMESPACE) \
 		$(if $(wildcard $(SERVER_VALUES_FILE)),--values $(SERVER_VALUES_FILE),)
 
-# Upgrade existing worker installation
+# Upgrade/Install Prefect worker using Helm (--install flag ensures it installs if not exists, upgrades if exists)
 .PHONY: upgrade-worker
-upgrade-worker: add-repos
-	@echo "Upgrading Prefect worker in namespace $(NAMESPACE)..."
-	helm upgrade $(WORKER_RELEASE_NAME) $(WORKER_CHART_REPO) \
+upgrade-worker: add-repos create-namespace
+	@echo "Upgrading/Installing Prefect worker in namespace $(NAMESPACE)..."
+	helm upgrade --install $(WORKER_RELEASE_NAME) $(WORKER_CHART_REPO) \
 		--namespace $(NAMESPACE) \
 		$(if $(wildcard $(WORKER_VALUES_FILE)),--values $(WORKER_VALUES_FILE),) \
 		--set-file worker.config.baseJobTemplate.configuration=src/worker/base-job-template.json
 
-# Upgrade OAuth2 Proxy
 .PHONY: upgrade-oauth-proxy
-upgrade-oauth-proxy: add-repos
-	@echo "Upgrading OAuth2 Proxy in namespace $(NAMESPACE)..."
-	helm upgrade prefect-oauth2-proxy oauth2-proxy/oauth2-proxy \
+upgrade-oauth-proxy: add-repos create-namespace
+	@echo "Upgrading/Installing OAuth proxy in namespace $(NAMESPACE)..."
+	helm upgrade --install prefect-oauth2-proxy oauth2-proxy/oauth2-proxy \
 		--namespace $(NAMESPACE) \
 		${if $(wildcard $(OAUTH2_VALUES_FILE)),--values $(OAUTH2_VALUES_FILE),}
 
-# Upgrade both server and worker
+# Upgrade/Install both server and worker, then upgrade ingresses
 .PHONY: upgrade
-upgrade: upgrade-server upgrade-worker upgrade-oauth-proxy create-ingress
+upgrade: upgrade-server upgrade-worker upgrade-oauth-proxy
+	@echo "Upgrading ingress resources..."
+	$(MAKE) create-cluster-issuer
+	$(MAKE) upgrade-server-ingress
+	$(MAKE) upgrade-oauth2-ingress
+
+# Upgrade server ingress
+.PHONY: upgrade-server-ingress
+upgrade-server-ingress:
+	@echo "Upgrading Prefect Server Ingress resource..."
+	kubectl apply -f src/server/server-ingress.yaml --namespace $(NAMESPACE)
+
+# Upgrade oauth2 ingress
+.PHONY: upgrade-oauth2-ingress
+upgrade-oauth2-ingress:
+	@echo "Upgrading OAuth2 Ingress resource..."
+	kubectl apply -f src/oauth-proxy/oauth-ingress.yaml --namespace $(NAMESPACE)
 
 # Uninstall Prefect server
 .PHONY: uninstall-server
@@ -137,9 +109,21 @@ uninstall-oauth-proxy:
 	@echo "Uninstalling OAuth2 Proxy from namespace $(NAMESPACE)..."
 	helm uninstall prefect-oauth2-proxy --namespace $(NAMESPACE)
 
+# Uninstall server ingress
+.PHONY: uninstall-server-ingress
+uninstall-server-ingress:
+	@echo "Uninstalling Prefect Server Ingress resource..."
+	kubectl delete -f src/server/server-ingress.yaml --namespace $(NAMESPACE) --ignore-not-found=true
+
+# Uninstall oauth2 ingress
+.PHONY: uninstall-oauth2-ingress
+uninstall-oauth2-ingress:
+	@echo "Uninstalling OAuth2 Ingress resource..."
+	kubectl delete -f src/oauth-proxy/oauth-ingress.yaml --namespace $(NAMESPACE) --ignore-not-found=true
+
 # Uninstall both server and worker
 .PHONY: uninstall
-uninstall: uninstall-server uninstall-worker uninstall-oauth-proxy
+uninstall: uninstall-server uninstall-worker uninstall-oauth-proxy uninstall-server-ingress uninstall-oauth2-ingress
 
 # Start port forwarding to access Prefect UI
 .PHONY: port-forward
@@ -193,17 +177,18 @@ help:
 	@echo "  add-repos          - Add Prefect Helm repository"
 	@echo "  add-rbac           - Add RBAC permissions for Prefect server and worker"
 	@echo "  create-namespace   - Create Kubernetes namespace"
-	@echo "  install-server     - Install only Prefect server"
-	@echo "  install-worker     - Install only Prefect worker"
-	@echo "  install-oauth-proxy - Install OAuth2 Proxy for authentication"
-	@echo "  install            - Install both Prefect server and worker"
-	@echo "  upgrade-server     - Upgrade existing Prefect server installation"
-	@echo "  upgrade-worker     - Upgrade existing Prefect worker installation"
-	@echo "  upgrade            - Upgrade both server and worker installations"
+	@echo "  upgrade-server     - Upgrade/Install Prefect server (uses --install flag)"
+	@echo "  upgrade-worker     - Upgrade/Install Prefect worker (uses --install flag)"
+	@echo "  upgrade-oauth-proxy - Upgrade/Install OAuth2 Proxy (uses --install flag)"
+	@echo "  upgrade            - Upgrade/Install both Prefect server and worker, then upgrade ingresses"
+	@echo "  upgrade-server-ingress - Upgrade Prefect Server Ingress resource"
+	@echo "  upgrade-oauth2-ingress - Upgrade OAuth2 Ingress resource"
 	@echo "  uninstall-server   - Uninstall Prefect server"
 	@echo "  uninstall-worker   - Uninstall Prefect worker"
 	@echo "  uninstall-oauth-proxy - Uninstall OAuth2 Proxy"
-	@echo "  uninstall          - Uninstall both server and worker"
+	@echo "  uninstall-server-ingress - Uninstall Prefect Server Ingress resource"
+	@echo "  uninstall-oauth2-ingress - Uninstall OAuth2 Ingress resource"
+	@echo "  uninstall          - Uninstall both server and worker with ingresses"
 	@echo "  port-forward       - Start port forwarding to access Prefect UI"
 	@echo "  status             - Check deployment status"
 	@echo "  create-server-values - Create default server-values.yaml if it doesn't exist"
