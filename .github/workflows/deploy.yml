@@ -5,11 +5,22 @@ on:
     branches: ["main"]
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
 
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
@@ -19,11 +30,29 @@ jobs:
       - name: Set up kubectl
         run: doctl kubernetes cluster kubeconfig save 0ab5b7be-1fd8-44fc-83ca-2e241d0ff318
 
+      - name: Verify cluster connection
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
       - name: Add prefect helm repository
-        run: make add-repo
+        run: make add-repos
+
+      - name: Add RBAC permissions
+        run: make add-rbac
 
       - name: Create namespace
         run: make create-namespace
 
-      - name: Upgrade prefect server
+      - name: Upgrade prefect server and worker
         run: make upgrade
+
+      - name: Verify deployment
+        run: |
+          echo "Waiting for pods to be ready..."
+          kubectl wait --for=condition=ready pod -l app=prefect-server -n prefect --timeout=300s
+          kubectl wait --for=condition=ready pod -l app=prefect-worker -n prefect --timeout=300s
+          kubectl wait --for=condition=ready pod -l app=prefect-oauth2-proxy -n prefect --timeout=300s
+          
+          echo "Deployment status:"
+          make status
