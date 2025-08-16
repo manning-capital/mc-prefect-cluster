@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: oauth2-proxy-ingress
+  namespace: prefect
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt"
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - prefect.manningcapital.co.uk
+      secretName: oauth2-tls
+  rules:
+    - host: prefect.manningcapital.co.uk
+      http:
+        paths:
+          - pathType: Prefix
+            path: /oauth2
+            backend:
+              service:
+                name: prefect-oauth2-proxy
+                port:
+                  number: 80
