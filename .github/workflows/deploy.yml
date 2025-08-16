@@ -45,6 +45,10 @@ jobs:
         run: make create-namespace
 
       - name: Upgrade prefect server and worker
+        env:
+          OAUTH2_CLIENT_ID: ${{ secrets.PREFECT_SERVER_GITHUB_CLIENT_ID }}
+          OAUTH2_CLIENT_SECRET: ${{ secrets.PREFECT_SERVER_GITHUB_OAUTH_APP_SECRET }}
+          OAUTH2_COOKIE_SECRET: ${{ secrets.PREFECT_SERVER_GITHUB_COOKIE_SECRET }}
         run: make upgrade
 
       - name: Verify deployment

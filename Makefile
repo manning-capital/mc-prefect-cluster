@@ -64,12 +64,16 @@ upgrade-worker: add-repos create-namespace
 		$(if $(wildcard $(WORKER_VALUES_FILE)),--values $(WORKER_VALUES_FILE),) \
 		--set-file worker.config.baseJobTemplate.configuration=src/worker/base-job-template.json
 
+# Upgrade/Install OAuth2 Proxy with optional secrets
 .PHONY: upgrade-oauth-proxy
 upgrade-oauth-proxy: add-repos create-namespace
 	@echo "Upgrading/Installing OAuth proxy in namespace $(NAMESPACE)..."
 	helm upgrade --install prefect-oauth2-proxy oauth2-proxy/oauth2-proxy \
 		--namespace $(NAMESPACE) \
-		${if $(wildcard $(OAUTH2_VALUES_FILE)),--values $(OAUTH2_VALUES_FILE),}
+		${if $(wildcard $(OAUTH2_VALUES_FILE)),--values $(OAUTH2_VALUES_FILE),} \
+		${if $(OAUTH2_CLIENT_ID),--set config.clientID=$(OAUTH2_CLIENT_ID),} \
+		${if $(OAUTH2_CLIENT_SECRET),--set config.clientSecret=$(OAUTH2_CLIENT_SECRET),} \
+		${if $(OAUTH2_COOKIE_SECRET),--set config.cookieSecret=$(OAUTH2_COOKIE_SECRET),}
 
 # Upgrade/Install both server and worker, then upgrade ingresses
 .PHONY: upgrade
