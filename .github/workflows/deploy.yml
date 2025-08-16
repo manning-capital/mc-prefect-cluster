@@ -49,10 +49,10 @@ jobs:
 
       - name: Verify deployment
         run: |
-          echo "Waiting for pods to be ready..."
-          kubectl wait --for=condition=ready pod -l app=prefect-server -n prefect --timeout=300s
-          kubectl wait --for=condition=ready pod -l app=prefect-worker -n prefect --timeout=300s
-          kubectl wait --for=condition=ready pod -l app=prefect-oauth2-proxy -n prefect --timeout=300s
+          echo "Waiting for services to be ready..."
+          kubectl wait --for=condition=ready service/prefect-server -n prefect --timeout=300s
+          kubectl wait --for=condition=ready service/prefect-worker -n prefect --timeout=300s
+          kubectl wait --for=condition=ready service/prefect-oauth2-proxy -n prefect --timeout=300s
           
           echo "Deployment status:"
           make status
