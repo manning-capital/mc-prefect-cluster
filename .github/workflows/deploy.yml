@@ -49,17 +49,17 @@ jobs:
         run: |
           echo "Waiting for all pods backing services to be ready..."
           
-          # Wait for all Prefect server pods to be ready
+          # Wait for all Prefect server pods to be ready (5 minutes timeout)
           echo "Waiting for Prefect server pods..."
-          kubectl wait --for=condition=ready pod --selector=app.kubernetes.io/instance=prefect-server -n prefect --timeout=300s
+          kubectl wait --for=condition=ready pod --selector=app.kubernetes.io/instance=prefect-server -n prefect --timeout=5m
           
-          # Wait for all Prefect worker pods to be ready
+          # Wait for all Prefect worker pods to be ready (5 minutes timeout)
           echo "Waiting for Prefect worker pods..."
-          kubectl wait --for=condition=ready pod --selector=app.kubernetes.io/instance=prefect-worker -n prefect --timeout=300s
+          kubectl wait --for=condition=ready pod --selector=app.kubernetes.io/instance=prefect-worker -n prefect --timeout=5m
           
-          # Wait for all OAuth2 proxy pods to be ready
+          # Wait for all OAuth2 proxy pods to be ready (5 minutes timeout)
           echo "Waiting for OAuth2 proxy pods..."
-          kubectl wait --for=condition=ready pod --selector=app.kubernetes.io/instance=prefect-oauth2-proxy -n prefect --timeout=300s
+          kubectl wait --for=condition=ready pod --selector=app.kubernetes.io/instance=prefect-oauth2-proxy -n prefect --timeout=5m
           
           echo "Deployment status:"
           make status
