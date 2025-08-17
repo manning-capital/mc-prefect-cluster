@@ -19,13 +19,13 @@ config:
     upstreams="http://prefect-server:4200"
 
 # Deployment configuration to prevent ReplicaSet proliferation
-deployment:
-  replicas: 1
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+replicaCount: 1
+revisionHistoryLimit: 10
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
 
 # Pod configuration for consistency
 pod:
