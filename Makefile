@@ -65,6 +65,7 @@ upgrade-worker: add-repos create-namespace
 		--set-file worker.config.baseJobTemplate.configuration=src/worker/base-job-template.json
 
 # Upgrade/Install OAuth2 Proxy with optional secrets
+# Note: cookieSecret must be 16, 24, or 32 bytes (raw) or 22, 32, or 44 characters (base64)
 .PHONY: upgrade-oauth-proxy
 upgrade-oauth-proxy: add-repos create-namespace
 	@echo "Upgrading/Installing OAuth proxy in namespace $(NAMESPACE)..."

@@ -5,3 +5,29 @@ config:
     github_org="manning-capital"
     email_domains="*"
     redirect_url="https://prefect.manningcapital.co.uk"
+    scope="read:org,user:email"
+    cookie_name="_oauth2_proxy"
+    cookie_domains=".manningcapital.co.uk"
+    cookie_secure="true"
+    cookie_httponly="true"
+    cookie_refresh="1h"
+    cookie_expire="4h"
+    set_xauthrequest="true"
+    set_authorization_header="true"
+    pass_access_token="true"
+    pass_authorization_header="true"
+    upstreams="http://prefect-server:4200"
+
+# Deployment configuration to prevent ReplicaSet proliferation
+deployment:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+# Pod configuration for consistency
+pod:
+  annotations:
+    rollme: "{{ randAlphaNum 5 | quote }}"

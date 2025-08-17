@@ -16,6 +16,8 @@ metadata:
     nginx.ingress.kubernetes.io/auth-url: "https://prefect.manningcapital.co.uk/oauth2/auth"
     nginx.ingress.kubernetes.io/auth-signin: "https://prefect.manningcapital.co.uk/oauth2/start?rd=$escaped_request_uri"
     nginx.ingress.kubernetes.io/auth-response-headers: "authorization"
+    nginx.ingress.kubernetes.io/auth-cache-key: "$remote_user$http_authorization$cookie__oauth2_proxy"
+    nginx.ingress.kubernetes.io/auth-cache-duration: "200 202 401 5m"
 spec:
   ingressClassName: nginx
   tls:
