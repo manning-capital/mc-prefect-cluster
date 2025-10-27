@@ -9,3 +9,15 @@ worker:
 serviceAccount:
   create: true
   name: prefect-worker
+
+resources:
+    # -- the requested resources for the worker container
+    requests:
+      memory: 1Gi
+      cpu: 1000m
+      # ephemeral-storage:
+    # -- the requested limits for the worker container
+    limits:
+      memory: 2Gi
+      cpu: 1000m
+      # ephemeral-storage:
