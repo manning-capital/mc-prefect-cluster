@@ -127,7 +127,7 @@
         "title": "Command"
       },
       "namespace": {
-        "default": "default",
+        "default": "prefect",
         "description": "The Kubernetes namespace to create jobs within.",
         "title": "Namespace",
         "type": "string"
