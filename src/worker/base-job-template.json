@@ -74,7 +74,7 @@
       "memory_limit": {
         "title": "Memory Limit",
         "description": "The memory allocation to limit for this pod.",
-        "default": "1Gi",
+        "default": "2Gi",
         "type": "string"
       },
       "name": {
