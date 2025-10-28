@@ -24,7 +24,17 @@
                 "env": "{{ env }}",
                 "image": "{{ image }}",
                 "imagePullPolicy": "{{ image_pull_policy }}",
-                "name": "prefect-job"
+                "name": "prefect-job",
+                "resources": {
+                  "requests": {
+                    "cpu": "{{ cpu_request }}",
+                    "memory": "{{ memory_request }}"
+                  },
+                  "limits": {
+                    "cpu": "{{ cpu_limit }}",
+                    "memory": "{{ memory_limit }}"
+                  }
+                }
               }
             ],
             "parallelism": 1,
@@ -43,6 +53,30 @@
   "variables": {
     "description": "Default variables for the Kubernetes worker.\n\nThe schema for this class is used to populate the `variables` section of the default\nbase job template.",
     "properties": {
+      "cpu_request": {
+        "title": "CPU Request",
+        "description": "The CPU allocation to request for this pod.",
+        "default": "500m",
+        "type": "string"
+      },
+      "memory_request": {
+        "title": "Memory Request",
+        "description": "The memory allocation to request for this pod.",
+        "default": "512Mi",
+        "type": "string"
+      },
+      "cpu_limit": {
+        "title": "CPU Limit",
+        "description": "The CPU allocation to limit for this pod.",
+        "default": "1000m",
+        "type": "string"
+      },
+      "memory_limit": {
+        "title": "Memory Limit",
+        "description": "The memory allocation to limit for this pod.",
+        "default": "1Gi",
+        "type": "string"
+      },
       "name": {
         "anyOf": [
           {
@@ -109,7 +143,9 @@
         ],
         "default": null,
         "description": "The image reference of a container image to use for created jobs. If not set, the latest Prefect image will be used.",
-        "examples": ["docker.io/prefecthq/prefect:3-latest"],
+        "examples": [
+          "docker.io/prefecthq/prefect:3-latest"
+        ],
         "title": "Image"
       },
       "service_account_name": {
@@ -128,7 +164,11 @@
       "image_pull_policy": {
         "default": "Always",
         "description": "The Kubernetes image pull policy to use for job containers.",
-        "enum": ["IfNotPresent", "Always", "Never"],
+        "enum": [
+          "IfNotPresent",
+          "Always",
+          "Never"
+        ],
         "title": "Image Pull Policy",
         "type": "string"
       },
@@ -209,7 +249,10 @@
             "type": "string"
           }
         },
-        "required": ["config", "context_name"],
+        "required": [
+          "config",
+          "context_name"
+        ],
         "secret_fields": [],
         "title": "KubernetesClusterConfig",
         "type": "object"
