@@ -56,7 +56,7 @@
       "cpu_request": {
         "title": "CPU Request",
         "description": "The CPU allocation to request for this pod.",
-        "default": "1000m",
+        "default": "512m",
         "type": "string"
       },
       "memory_request": {
@@ -68,7 +68,7 @@
       "cpu_limit": {
         "title": "CPU Limit",
         "description": "The CPU allocation to limit for this pod.",
-        "default": "2000m",
+        "default": "1000m",
         "type": "string"
       },
       "memory_limit": {
